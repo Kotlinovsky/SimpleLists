@@ -1,5 +1,32 @@
 apply plugin: 'com.android.library'
 apply from: '../common.gradle'
+apply plugin: 'maven-publish'
+
+def githubProperties = new Properties()
+githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
+
+publishing {
+    publications {
+        bar(MavenPublication) {
+            artifactId "simplelists"
+            artifact "$buildDir/outputs/aar/simplelists-release.aar"
+            groupId 'io.kotlinovsky'
+            version "1.0.0"
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Kotlinovsky/SimpleLists")
+
+            credentials {
+                username = githubProperties['gpr.usr'] ?: System.getenv("GPR_USER")
+                password = githubProperties['gpr.key'] ?: System.getenv("GPR_API_KEY")
+            }
+        }
+    }
+}
 
 registerModule()
 
