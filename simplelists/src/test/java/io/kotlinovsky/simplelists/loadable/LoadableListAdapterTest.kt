@@ -4,8 +4,6 @@ import android.app.Activity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.nhaarman.mockitokotlin2.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.clearInvocations
@@ -15,6 +13,7 @@ import org.robolectric.RobolectricTestRunner
 import io.kotlinovsky.simplelists.dependencies.TestListViewObject
 import io.kotlinovsky.simplelists.loadable.dependencies.LoadableTestAdapter
 import io.kotlinovsky.simplelists.model.BasicListItem
+import org.junit.Assert.*
 
 @RunWith(RobolectricTestRunner::class)
 class LoadableListAdapterTest {
@@ -463,6 +462,51 @@ class LoadableListAdapterTest {
         assertEquals(second, adapter.currentItems[1])
         assertEquals(third, adapter.currentItems[2])
         assertCount(adapter, 3, 3)
+    }
+
+    @Test
+    fun testViewTypesLogging() {
+        val adapter = getAdapter()
+        val firstOfFirst = BasicListItem(0, TestListViewObject("First 1"))
+        val secondOfFirst = BasicListItem(0, TestListViewObject("First 2"))
+        val firstOfSecond = BasicListItem(1, TestListViewObject("Second 1"))
+        val secondOfSecond = BasicListItem(1, TestListViewObject("Second 2"))
+        val firstOfThird = BasicListItem(2, TestListViewObject("Third 1"))
+        val secondOfThird = BasicListItem(2, TestListViewObject("Third 2"))
+
+        adapter.addItems(0, listOf(firstOfFirst, secondOfFirst))
+        adapter.addItems(0, listOf(firstOfSecond, secondOfSecond))
+        adapter.addItems(0, listOf(firstOfThird, secondOfThird))
+
+        assertEquals(2, adapter.countByTypes[0])
+        assertEquals(2, adapter.countByTypes[1])
+        assertEquals(2, adapter.countByTypes[2])
+
+        adapter.removeItems(0, 2)
+        assertFalse(adapter.countByTypes.containsKey(2))
+        assertEquals(2, adapter.countByTypes[0])
+        assertEquals(2, adapter.countByTypes[1])
+
+        adapter.removeItems(0, 2)
+        assertFalse(adapter.countByTypes.containsKey(2))
+        assertFalse(adapter.countByTypes.containsKey(1))
+        assertEquals(2, adapter.countByTypes[0])
+
+        adapter.removeItems(0, 2)
+        assertFalse(adapter.countByTypes.containsKey(2))
+        assertFalse(adapter.countByTypes.containsKey(1))
+        assertFalse(adapter.countByTypes.containsKey(0))
+
+        val list = listOf(
+            firstOfFirst,
+            secondOfFirst,
+            firstOfSecond
+        )
+
+        adapter.changeItems(list, false)
+        assertFalse(adapter.countByTypes.containsKey(2))
+        assertEquals(2, adapter.countByTypes[0])
+        assertEquals(1, adapter.countByTypes[1])
     }
 
     private fun assertCount(list: LoadableTestAdapter, count: Int, countWithoutExcluding: Int) {

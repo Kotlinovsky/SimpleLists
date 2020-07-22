@@ -3,6 +3,7 @@ package io.kotlinovsky.simplelists.loadable
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.DiffUtil
 import io.kotlinovsky.simplelists.BasicListAdapter
 import io.kotlinovsky.simplelists.BasicListHolder
@@ -34,7 +35,10 @@ abstract class LoadableListAdapter : BasicListAdapter() {
         set(value) {
             if (value != field) {
                 if (value) {
-                    super.addItems(super.getItemsCount(), listOf(BasicListItem(LOADER_VIEW_TYPE, null)))
+                    super.addItems(
+                        super.getItemsCount(),
+                        listOf(BasicListItem(LOADER_VIEW_TYPE, null))
+                    )
                 } else {
                     super.removeItems(super.getItemsCount() - 1, 1)
                 }
@@ -42,6 +46,9 @@ abstract class LoadableListAdapter : BasicListAdapter() {
 
             field = value
         }
+
+    @VisibleForTesting
+    val countByTypes = HashMap<Int, Int>()
 
     override fun addItems(position: Int, items: List<BasicListItem<*>>) {
         var insertPosition = position
@@ -51,6 +58,14 @@ abstract class LoadableListAdapter : BasicListAdapter() {
         }
 
         super.addItems(insertPosition, items)
+        recalculateTypes(items)
+    }
+
+    private fun recalculateTypes(items: List<BasicListItem<*>>) {
+        items.forEach {
+            // Precalculating for fast paging
+            countByTypes[it.viewType] = (countByTypes[it.viewType] ?: 0) + 1
+        }
     }
 
     override fun removeItems(position: Int, count: Int) {
@@ -58,6 +73,16 @@ abstract class LoadableListAdapter : BasicListAdapter() {
 
         if (isTopLoadingEnabled) {
             removePosition++
+        }
+
+        currentItems.subList(removePosition, removePosition + count).forEach {
+            val current = countByTypes[it.viewType]!!
+
+            if (current > 1) {
+                countByTypes[it.viewType] = current - 1
+            } else {
+                countByTypes.remove(it.viewType)
+            }
         }
 
         super.removeItems(removePosition, count)
@@ -84,11 +109,6 @@ abstract class LoadableListAdapter : BasicListAdapter() {
     }
 
     override fun changeItems(newList: List<BasicListItem<*>>?, detectMoves: Boolean) {
-        if (!isTopLoadingEnabled && !isBottomLoadingEnabled) {
-            super.changeItems(newList, detectMoves)
-            return
-        }
-
         var toIndex = super.getItemsCount()
         var fromIndex = 0
 
@@ -106,8 +126,10 @@ abstract class LoadableListAdapter : BasicListAdapter() {
         }, detectMoves)
 
         oldList.clear()
+        countByTypes.clear()
 
         if (newList != null) {
+            recalculateTypes(newList)
             oldList.addAll(newList)
         }
 
@@ -128,7 +150,12 @@ abstract class LoadableListAdapter : BasicListAdapter() {
         return count
     }
 
-    override fun createViewHolder(context: Context, inflater: LayoutInflater, parent: ViewGroup, viewType: Int): BasicListHolder<*> {
+    override fun createViewHolder(
+        context: Context,
+        inflater: LayoutInflater,
+        parent: ViewGroup,
+        viewType: Int
+    ): BasicListHolder<*> {
         return if (viewType == LOADER_VIEW_TYPE) {
             createLoaderViewHolder(context, inflater, parent)
         } else {
@@ -144,7 +171,12 @@ abstract class LoadableListAdapter : BasicListAdapter() {
      * @param parent Родительская View
      * @param viewType Тип View, которую нужно создать.
      */
-    abstract fun createItemViewHolder(context: Context, inflater: LayoutInflater, parent: ViewGroup, viewType: Int): BasicListHolder<*>
+    abstract fun createItemViewHolder(
+        context: Context,
+        inflater: LayoutInflater,
+        parent: ViewGroup,
+        viewType: Int
+    ): BasicListHolder<*>
 
     /**
      * Возвращает Holder с View-загрузчиком.
@@ -153,5 +185,9 @@ abstract class LoadableListAdapter : BasicListAdapter() {
      * @param inflater LayoutInflater для получения разметки
      * @param parent Родительская View
      */
-    abstract fun createLoaderViewHolder(context: Context, inflater: LayoutInflater, parent: ViewGroup): BasicListHolder<*>
+    abstract fun createLoaderViewHolder(
+        context: Context,
+        inflater: LayoutInflater,
+        parent: ViewGroup
+    ): BasicListHolder<*>
 }
