@@ -28,14 +28,14 @@ class BasicListContainerTest {
         activity.setContentView(basicListContainer)
         controller.setup()
 
-        basicListContainer.toggleLoading(true)
+        basicListContainer.isLoadingEnabled = true
         val loaderView = basicListContainer.children.find { it != list }!!
 
         assertEquals(2, basicListContainer.childCount)
         assertEquals(View.GONE, list.visibility)
         assertEquals(View.VISIBLE, loaderView.visibility)
 
-        basicListContainer.toggleLoading(false)
+        basicListContainer.isLoadingEnabled = false
         assertEquals(2, basicListContainer.childCount)
         assertEquals(View.VISIBLE, list.visibility)
         assertEquals(View.GONE, loaderView.visibility)

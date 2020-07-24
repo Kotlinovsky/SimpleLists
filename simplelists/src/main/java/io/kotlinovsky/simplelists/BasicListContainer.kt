@@ -29,9 +29,37 @@ open class BasicListContainer : FrameLayout, ViewTreeObserver.OnDrawListener {
 
     internal var isScrolling = false
     internal var stickyView: View? = null
+    internal var isLoadingEnabled = false
+        set(value) {
+            if (loaderView == null) {
+                loaderView = getAdapter().createViewHolder(
+                    context,
+                    layoutInflater,
+                    this,
+                    LOADER_VIEW_TYPE
+                ).itemView
+                loaderView!!.layoutParams = LayoutParams(
+                    LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT,
+                    Gravity.CENTER
+                )
+
+                addView(loaderView!!)
+            }
+
+            if (value) {
+                loaderView!!.visibility = View.VISIBLE
+                listView!!.visibility = View.GONE
+            } else {
+                stickyView?.visibility = View.GONE
+                loaderView!!.visibility = View.GONE
+                listView!!.visibility = View.VISIBLE
+            }
+
+            field = value
+        }
 
     private var stickyViewType = 0
-    private var isLoadingEnabled = false
     private var layoutInflater = LayoutInflater.from(context)
     private var stickyViewHolder: BasicListHolder<BasicListViewObject<*, Any>>? = null
     private var stickyViewBinder: StickyViewBinder<View>? = null
@@ -40,7 +68,11 @@ open class BasicListContainer : FrameLayout, ViewTreeObserver.OnDrawListener {
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
 
     override fun onDraw() {
         if (!isScrolling && stickyView != null && (listView!!.itemAnimator == null || listView!!.itemAnimator!!.isRunning)) {
@@ -76,32 +108,6 @@ open class BasicListContainer : FrameLayout, ViewTreeObserver.OnDrawListener {
         if (!isScrolling && stickyView != null && (listView!!.itemAnimator == null || listView!!.itemAnimator!!.isRunning)) {
             updateStickyView()
         }
-    }
-
-    /**
-     * Включает загрузку повверх списка.
-     * Скрывает список если загрузка включена.
-     *
-     * @param toggle Включить загрузку?
-     */
-    fun toggleLoading(toggle: Boolean) {
-        if (loaderView == null) {
-            loaderView = getAdapter().createViewHolder(context, layoutInflater, this, LOADER_VIEW_TYPE).itemView
-            loaderView!!.layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER)
-
-            addView(loaderView!!)
-        }
-
-        if (toggle) {
-            loaderView!!.visibility = View.VISIBLE
-            listView!!.visibility = View.GONE
-        } else {
-            stickyView?.visibility = View.GONE
-            loaderView!!.visibility = View.GONE
-            listView!!.visibility = View.VISIBLE
-        }
-
-        isLoadingEnabled = toggle
     }
 
     /**
@@ -165,7 +171,11 @@ open class BasicListContainer : FrameLayout, ViewTreeObserver.OnDrawListener {
                 }
 
                 changeTranslationY(stickyView!!, 0F)
-            } else if (minChildItem.viewObject != null && stickyViewBinder!!.bindData(stickyView!!, minChildItem.viewObject)) {
+            } else if (minChildItem.viewObject != null && stickyViewBinder!!.bindData(
+                    stickyView!!,
+                    minChildItem.viewObject
+                )
+            ) {
                 changeVisibility(stickyView!!, View.VISIBLE)
                 listView!!.children.forEach { changeVisibility(it, View.VISIBLE) }
 

@@ -47,7 +47,7 @@ abstract class LoadableListAdapter : BasicListAdapter() {
             field = value
         }
 
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val countByTypes = HashMap<Int, Int>()
 
     override fun addItems(position: Int, items: List<BasicListItem<*>>) {
