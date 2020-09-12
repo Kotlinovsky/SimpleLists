@@ -29,7 +29,8 @@ open class BasicListContainer : FrameLayout, ViewTreeObserver.OnDrawListener {
 
     internal var isScrolling = false
     internal var stickyView: View? = null
-    internal var isLoadingEnabled = false
+
+    var isLoadingEnabled = false
         set(value) {
             if (loaderView == null) {
                 loaderView = getAdapter().createViewHolder(
