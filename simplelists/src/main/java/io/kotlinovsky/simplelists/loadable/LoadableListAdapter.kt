@@ -121,7 +121,7 @@ abstract class LoadableListAdapter : BasicListAdapter() {
         }
 
         val oldList = currentItems.subList(fromIndex, toIndex)
-        val result = DiffUtil.calculateDiff(ItemDiffCallback(oldList, newList) { old, new ->
+        val result = DiffUtil.calculateDiff(ItemDiffCallback(ArrayList(oldList), newList) { old, new ->
             new.viewAnimationState = old.viewAnimationState
         }, detectMoves)
 
