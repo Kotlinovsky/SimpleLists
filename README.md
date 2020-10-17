@@ -1,9 +1,7 @@
 # SimpleLists
-Lightweight library for lists building in Android.
+Библиотека для простой и удобной работы со списками.
 
-Features:
-
-1) Sticky headers
-2) Changing items without notifyItemInserted and etc
-3) Loading in top and bottom of list
-4) Sectioning for lists.
+1) Отображает кликабельные "липкие" заголовки;
+2) Отображает загрузчик снизу и сверху списка без потери работоспособности функций по изменению данных;
+3) Дает простые функции для работы со списком. Больше не нужно вызывать notifyItemInserted() и т.п. методы;
+4) Базовое деление списков на секции.
